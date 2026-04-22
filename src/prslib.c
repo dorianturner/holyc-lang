@@ -179,14 +179,17 @@ Vec *parseParams(Cctrl *cc, s64 terminator, int *has_var_args, int store) {
                 if (cc->tmp_locals) {
                     listAppend(cc->tmp_locals, var);
                 }
-                vecPush(params, var);
 
                 tok = cctrlTokenGet(cc);
                 if (tokenPunctIs(tok, '=')) {
                     Ast *default_fnptr = parseDefaultFunctionParam(cc,var);
                     var->default_fn = default_fnptr;
+                    vecPush(params, default_fnptr);
                     tok = cctrlTokenGet(cc);
+                } else {
+                    vecPush(params, var);
                 }
+                
                 if (tokenPunctIs(tok, terminator)) {
                     return params;
                 }
@@ -545,6 +548,17 @@ Ast *parseFunctionArguments(Cctrl *cc, char *fname, int len, s64 terminator) {
     AstType *rettype = NULL;
     Ast *maybe_fn = findFunctionDecl(cc,fname,len);
     Vec *argv = parseArgv(cc,maybe_fn,terminator,fname,len);
+
+    /* Check argument counts match for non vararg functions */
+    /* function->has_var_args appears broken and never set correctly to me */
+    if (maybe_fn && !astFuncHasVarArgs(maybe_fn) && !astFuncHasDefaultArgs(maybe_fn)) {
+        int expected = maybe_fn->params ? (int)maybe_fn->params->size : 0;
+        int given = (int)argv->size;
+
+        if (given != expected) {
+            cctrlRaiseExceptionFromTo(cc, NULL, '(', ')', "Unexpected number of arguments %d in call to %.*s(), expected %d", given, len, fname, expected);
+        }
+    }
 
     if (maybe_fn) {
         rettype = maybe_fn->type->rettype;

@@ -490,6 +490,8 @@ int astIsAddr(Ast *ast);
 int astIsDeref(Ast *ast);
 int astIsUnOp(Ast *ast);
 int astIsBinOp(Ast *ast);
+int astFuncHasVarArgs(Ast *ast);
+int astFuncHasDefaultArgs(Ast *ast);
 
 
 AoStr *astMakeLabel(void);
