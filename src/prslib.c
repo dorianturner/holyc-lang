@@ -189,7 +189,7 @@ Vec *parseParams(Cctrl *cc, s64 terminator, int *has_var_args, int store) {
                 } else {
                     vecPush(params, var);
                 }
-                
+
                 if (tokenPunctIs(tok, terminator)) {
                     return params;
                 }
@@ -551,7 +551,8 @@ Ast *parseFunctionArguments(Cctrl *cc, char *fname, int len, s64 terminator) {
 
     /* Check argument counts match for non vararg functions */
     /* function->has_var_args appears broken and never set correctly to me */
-    if (maybe_fn && !astFuncHasVarArgs(maybe_fn) && !astFuncHasDefaultArgs(maybe_fn)) {
+    /* Also guard for FUNPTR and LVAR cos not sure if we can statically verify argument counts for funptr calls at parse time, maybe at runtime with an assembly func */
+    if (maybe_fn && maybe_fn->kind != AST_FUNPTR && maybe_fn->kind != AST_LVAR &&!astFuncHasVarArgs(maybe_fn) && !astFuncHasDefaultArgs(maybe_fn)) {
         int expected = maybe_fn->params ? (int)maybe_fn->params->size : 0;
         int given = (int)argv->size;
 
